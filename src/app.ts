@@ -9,11 +9,20 @@ import { typing } from "./utils/presence"
 const PORT = process.env?.PORT ?? 3008
 const ASSISTANT_ID = process.env?.ASSISTANT_ID ?? ''
 
+
+
 const welcomeFlow = addKeyword<Provider, Database>(EVENTS.WELCOME)
     .addAction(async (ctx, { flowDynamic, state, provider }) => {
+      
         await typing(ctx, provider)
         const response = await toAsk(ASSISTANT_ID, ctx.body, state)
-        const chunks = response.split(/(?<!\d)\.\s+/g);
+
+        const expReg = /【.*?】/g;
+        const filterText = response.replace(expReg, "");
+
+
+        
+        const chunks = filterText.split(/(?<!\d)\.\s+/g);
         for (const chunk of chunks) {
             await flowDynamic([{ body: chunk.trim() }]);
         }
@@ -21,6 +30,7 @@ const welcomeFlow = addKeyword<Provider, Database>(EVENTS.WELCOME)
 
 const main = async () => {
     const adapterFlow = createFlow([welcomeFlow])
+  
     const adapterProvider = createProvider(Provider)
     const adapterDB = new Database()
 
